@@ -3,10 +3,10 @@ pipeline {
 
     environment {
         DOCKER_CREDENTIALS_ID = 'roseaw-dockerhub'  
-        DOCKER_IMAGE = 'cithit/fouodom'                                   //<-----change this to your MiamiID!
+        DOCKER_IMAGE = 'cithit/fouodom'                                   //<-----change this to your!
         IMAGE_TAG = "build-${BUILD_NUMBER}"
         GITHUB_URL = 'https://github.com/Mauricette-eng/225-lab5-1.git'     //<-----change this to match this new repository!
-        KUBECONFIG = credentials('fouodom-225')                           //<-----change this to match your kubernetes credentials (MiamiID-225)! 
+        KUBECONFIG = credentials('fouodom-225')                           //<-----change this to match your kubernetes credentials  
     }
 
     stages {
@@ -143,13 +143,13 @@ pipeline {
     post {
 
         success {
-            slackSend color: "good", message: "Build Completed: ${env.JOB_NAME} ${env.BUILD_NUMBER}"
+            slackSend color: "good", message: "Build Lab 5.1 Completed: ${env.JOB_NAME} ${env.BUILD_NUMBER}"
         }
         unstable {
-            slackSend color: "warning", message: "Build Completed: ${env.JOB_NAME} ${env.BUILD_NUMBER}"
+            slackSend color: "warning", message: "Build Lab 5.1 Unstable: ${env.JOB_NAME} ${env.BUILD_NUMBER}"
         }
         failure {
-            slackSend color: "danger", message: "Build Completed: ${env.JOB_NAME} ${env.BUILD_NUMBER}"
+            slackSend color: "danger", message: "Build Lab 5.1 Failed: ${env.JOB_NAME} ${env.BUILD_NUMBER}"
         }
     }
 }
