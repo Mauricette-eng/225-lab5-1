@@ -1,3 +1,4 @@
+
 from flask import Flask, request, render_template, redirect, url_for, flash
 import sqlite3
 import os
@@ -18,55 +19,67 @@ def init_db():
     with app.app_context():
         db = get_db()
         db.execute('''
-            CREATE TABLE IF NOT EXISTS contacts (
+            CREATE TABLE IF NOT EXISTS songs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                phone TEXT NOT NULL
+                title TEXT NOT NULL,
+                artist TEXT NOT NULL
             );
         ''')
         db.commit()
         db.close()
 
-@app.route('/', methods=['GET', 'POST'])
-def index():
+# -----------------------------
+# Home page
+# -----------------------------
+@app.route('/')
+def home():
+    return render_template('home.html')
+
+# -----------------------------
+# Playlist page (CRUD on songs)
+# -----------------------------
+@app.route('/playlist', methods=['GET', 'POST'])
+def playlist():
     if request.method == 'POST':
         action = request.form.get('action')
 
         if action == 'delete':
-            contact_id = request.form.get('contact_id')
-            if contact_id:
+            song_id = request.form.get('song_id')
+            if song_id:
                 db = get_db()
-                db.execute('DELETE FROM contacts WHERE id = ?', (contact_id,))
+                db.execute('DELETE FROM songs WHERE id = ?', (song_id,))
                 db.commit(); db.close()
-                flash('Contact deleted successfully.', 'success')
+                flash('Song removed from playlist.', 'success')
             else:
-                flash('Missing contact id.', 'danger')
-            return redirect(url_for('index'))
+                flash('Missing song ID.', 'danger')
+            return redirect(url_for('playlist'))
 
         if action == 'update':
-            contact_id = request.form.get('contact_id')
-            name = request.form.get('name')
-            phone = request.form.get('phone')
-            if contact_id and name and phone:
+            song_id = request.form.get('song_id')
+            title = request.form.get('title')
+            artist = request.form.get('artist')
+            if song_id and title and artist:
                 db = get_db()
-                db.execute('UPDATE contacts SET name=?, phone=? WHERE id=?', (name, phone, contact_id))
+                db.execute('UPDATE songs SET title=?, artist=? WHERE id=?',
+                           (title, artist, song_id))
                 db.commit(); db.close()
-                flash('Contact updated.', 'success')
+                flash('Song updated.', 'success')
             else:
                 flash('Missing fields for update.', 'danger')
-            return redirect(url_for('index'))
+            return redirect(url_for('playlist'))
 
-        # default → add
-        name = request.form.get('name')
-        phone = request.form.get('phone')
-        if name and phone:
+        # default -> add
+        title = request.form.get('title')
+        artist = request.form.get('artist')
+        if title and artist:
             db = get_db()
-            db.execute('INSERT INTO contacts (name, phone) VALUES (?, ?)', (name, phone))
+            db.execute('INSERT INTO songs (title, artist) VALUES (?, ?)',
+                       (title, artist))
             db.commit(); db.close()
-            flash('Contact added successfully.', 'success')
+            flash('Song added to playlist!', 'success')
         else:
-            flash('Missing name or phone number.', 'danger')
-        return redirect(url_for('index'))
+            flash('Missing song title or artist.', 'danger')
+        return redirect(url_for('playlist'))
 
     # GET: pagination
     try:
@@ -80,9 +93,9 @@ def index():
     offset = (page - 1) * per_page
 
     db = get_db()
-    total = db.execute('SELECT COUNT(*) FROM contacts').fetchone()[0]
-    contacts = db.execute(
-        'SELECT * FROM contacts ORDER BY id DESC LIMIT ? OFFSET ?',
+    total = db.execute('SELECT COUNT(*) FROM songs').fetchone()[0]
+    songs = db.execute(
+        'SELECT * FROM songs ORDER BY id DESC LIMIT ? OFFSET ?',
         (per_page, offset)
     ).fetchall()
     db.close()
@@ -95,11 +108,25 @@ def index():
 
     return render_template(
         'index.html',
-        contacts=contacts,
+        songs=songs,
         page=page, pages=pages, per_page=per_page,
         has_prev=has_prev, has_next=has_next, total=total,
         start_page=start_page, end_page=end_page
     )
+
+# -----------------------------
+# Suggested music page
+# -----------------------------
+@app.route('/suggest')
+def suggest():
+    suggestions = [
+        "Blinding Lights – The Weeknd",
+        "Flowers – Miley Cyrus",
+        "Calm Down – Rema",
+        "As It Was – Harry Styles",
+        "Shape of You – Ed Sheeran",
+    ]
+    return render_template('suggest.html', suggestions=suggestions)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
