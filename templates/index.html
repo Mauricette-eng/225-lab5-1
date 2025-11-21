@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>My Music Playlist</title>
 
-    <!-- Fonts (branding) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Oswald:wght@400;500;600&display=swap" rel="stylesheet">
@@ -14,6 +13,17 @@
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
   </head>
   <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+      <div class="container">
+        <a class="navbar-brand" href="{{ url_for('home') }}">My Music App</a>
+        <div class="navbar-nav">
+          <a class="nav-link" href="{{ url_for('home') }}">Home</a>
+          <a class="nav-link active" href="{{ url_for('playlist') }}">Playlist</a>
+          <a class="nav-link" href="{{ url_for('suggest') }}">Suggest</a>
+        </div>
+      </div>
+    </nav>
+
     <div class="container">
 
       <header class="mb-4 py-3 border-bottom d-flex align-items-center">
@@ -23,8 +33,7 @@
         </div>
       </header>
 
-      <!-- Flash messages -->
-      {% with msgs = get_flashed_messages(with_categories=True) %} 
+      {% with msgs = get_flashed_messages(with_categories=True) %}
         {% if msgs %}
           <div class="mb-3">
             {% for category, m in msgs %}
@@ -38,19 +47,18 @@
         {% endif %}
       {% endwith %}
 
-      <!-- Add form -->
       <div class="card shadow-sm form-card mb-4">
         <div class="card-body">
           <h2 class="h5 mb-3">Add Song</h2>
-          <form method="POST" action="{{ url_for('index') }}" class="row g-3">
+          <form method="POST" action="{{ url_for('playlist') }}" class="row g-3">
             <input type="hidden" name="action" value="add">
             <div class="col-md-6">
-              <label for="name" class="form-label">Song Title</label>
-              <input class="form-control" id="name" name="name" required>
+              <label for="title" class="form-label">Song Title</label>
+              <input class="form-control" id="title" name="title" required>
             </div>
             <div class="col-md-6">
-              <label for="phone" class="form-label">Artist</label>
-              <input class="form-control" id="phone" name="phone" required>
+              <label for="artist" class="form-label">Artist</label>
+              <input class="form-control" id="artist" name="artist" required>
             </div>
             <div class="col-12">
               <button class="btn btn-primary" type="submit">Add Song</button>
@@ -59,13 +67,11 @@
         </div>
       </div>
 
-      <!-- Search + heading -->
       <div class="d-flex justify-content-between align-items-center mb-2">
         <h2 class="h5 m-0">All Songs</h2>
         <input id="filter" class="form-control" style="max-width: 280px;" placeholder="Search…">
       </div>
 
-      <!-- Songs table -->
       <div class="card shadow-sm mb-3">
         <div class="table-responsive">
           <table class="table align-middle mb-0 table-striped">
@@ -78,11 +84,11 @@
               </tr>
             </thead>
             <tbody id="rows">
-              {% for c in contacts %}
+              {% for s in songs %}
               <tr>
-                <td class="id text-secondary">{{ c['id'] }}</td>
-                <td class="name">{{ c['name'] }}</td>
-                <td class="phone text-nowrap">{{ c['phone'] }}</td>
+                <td class="id text-secondary">{{ s['id'] }}</td>
+                <td class="name">{{ s['title'] }}</td>
+                <td class="phone text-nowrap">{{ s['artist'] }}</td>
                 <td class="text-end">
                   <div class="d-inline-flex gap-2">
                     <button
@@ -90,13 +96,13 @@
                       class="btn btn-sm btn-outline-secondary"
                       data-bs-toggle="modal"
                       data-bs-target="#editModal"
-                      data-id="{{ c['id'] }}"
-                      data-name="{{ c['name'] }}"
-                      data-phone="{{ c['phone'] }}"
+                      data-id="{{ s['id'] }}"
+                      data-name="{{ s['title'] }}"
+                      data-phone="{{ s['artist'] }}"
                     >Edit</button>
 
-                    <form method="POST" action="{{ url_for('index') }}" onsubmit="return confirm('Delete this song?')">
-                      <input type="hidden" name="contact_id" value="{{ c['id'] }}">
+                    <form method="POST" action="{{ url_for('playlist') }}" onsubmit="return confirm('Delete this song?')">
+                      <input type="hidden" name="song_id" value="{{ s['id'] }}">
                       <input type="hidden" name="action" value="delete">
                       <button class="btn btn-sm btn-outline-danger">Delete</button>
                     </form>
@@ -104,7 +110,7 @@
                 </td>
               </tr>
               {% endfor %}
-              {% if not contacts %}
+              {% if not songs %}
               <tr><td colspan="4" class="text-center text-secondary py-4">No songs found.</td></tr>
               {% endif %}
             </tbody>
@@ -112,22 +118,21 @@
         </div>
       </div>
 
-      <!-- Pagination -->
       <nav aria-label="Songs pagination" class="d-flex justify-content-between align-items-center">
         <div class="text-secondary small">
           Page <strong>{{ page }}</strong> of <strong>{{ pages }}</strong> · {{ total }} total
         </div>
         <ul class="pagination mb-0">
           <li class="page-item {% if not has_prev %}disabled{% endif %}">
-            <a class="page-link" href="{{ url_for('index', page=page-1, per=per_page) if has_prev else '#' }}">Previous</a>
+            <a class="page-link" href="{{ url_for('playlist', page=page-1, per=per_page) if has_prev else '#' }}">Previous</a>
           </li>
           {% for p in range(start_page, end_page + 1) %}
             <li class="page-item {% if p==page %}active{% endif %}">
-              <a class="page-link" href="{{ url_for('index', page=p, per=per_page) }}">{{ p }}</a>
+              <a class="page-link" href="{{ url_for('playlist', page=p, per=per_page) }}">{{ p }}</a>
             </li>
           {% endfor %}
           <li class="page-item {% if not has_next %}disabled{% endif %}">
-            <a class="page-link" href="{{ url_for('index', page=page+1, per=per_page) if has_next else '#' }}">Next</a>
+            <a class="page-link" href="{{ url_for('playlist', page=page+1, per=per_page) if has_next else '#' }}">Next</a>
           </li>
         </ul>
       </nav>
@@ -137,12 +142,11 @@
       </footer>
     </div>
 
-    <!-- Edit Modal -->
     <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog">
-        <form method="POST" action="{{ url_for('index') }}" class="modal-content">
+        <form method="POST" action="{{ url_for('playlist') }}" class="modal-content">
           <input type="hidden" name="action" value="update">
-          <input type="hidden" name="contact_id" id="edit-id">
+          <input type="hidden" name="song_id" id="edit-id">
           <div class="modal-header">
             <h5 class="modal-title">Edit Song</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -150,11 +154,11 @@
           <div class="modal-body row g-3">
             <div class="col-12">
               <label class="form-label">Song Title</label>
-              <input class="form-control" name="name" id="edit-name" required>
+              <input class="form-control" name="title" id="edit-name" required>
             </div>
             <div class="col-12">
               <label class="form-label">Artist</label>
-              <input class="form-control" name="phone" id="edit-phone" required>
+              <input class="form-control" name="artist" id="edit-phone" required>
             </div>
           </div>
           <div class="modal-footer">
