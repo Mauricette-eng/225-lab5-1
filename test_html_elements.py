@@ -1,37 +1,41 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import unittest
-import time
 
-class TestMusicPlaylist(unittest.TestCase):
+class TestPlaylist(unittest.TestCase):
+
     def setUp(self):
-        # Setup Firefox options
-        firefox_options = Options()
-        firefox_options.add_argument("--headless")  # Run in headless mode
-        firefox_options.add_argument("--no-sandbox")
-        firefox_options.add_argument("--disable-dev-shm-usage")
-        self.driver = webdriver.Firefox(options=firefox_options)
+        opts = Options()
+        opts.add_argument("--headless")
+        opts.add_argument("--no-sandbox")
+        opts.add_argument("--disable-dev-shm-usage")
+        self.driver = webdriver.Firefox(options=opts)
 
-    def test_playlist_page_loads(self):
+    def test_playlist(self):
         driver = self.driver
 
-        # 1) Go to the home page (your ClusterIP)
-        driver.get("http://10.48.229.152")  # your dev ClusterIP
+        # CHANGE THIS TO YOUR DEV IP
+        driver.get("http://10.48.229.152/playlist")
 
-        # 2) Make sure the home page text is present
-        assert "My Music Playlist" in driver.page_source, "Home page did not load correctly"
+        # Wait until the table loads
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.TAG_NAME, "table"))
+        )
 
-        # 3) Click the "View My Playlist" button (link)
-        view_button = driver.find_element(By.LINK_TEXT, "View My Playlist")
-        view_button.click()
-        time.sleep(1)  # small wait to let the page load
+        # Check for the 10 generated test songs
+        for i in range(10):
+            title = f"Test Song {i}"
+            artist = f"Artist {i}"
 
-        # 4) Now check that the playlist page loaded
-        assert "Add Song" in driver.page_source, "Playlist page did not show the Add Song form"
-        assert "All Songs" in driver.page_source, "Playlist listing did not appear"
+            page = driver.page_source
 
-        print("✔ Selenium test passed: playlist pages load correctly.")
+            assert title in page, f"Song title {title} not found"
+            assert artist in page, f"Artist {artist} not found"
+
+        print("Playlist test passed — all songs verified.")
 
     def tearDown(self):
         self.driver.quit()
