@@ -16,24 +16,24 @@ class TestPlaylist(unittest.TestCase):
     def test_songs_present(self):
         driver = self.driver
 
-        # Use your Dev ClusterIP; adjust if needed
+        # Your Dev cluster IP — KEEP AS IS
         driver.get("http://10.48.229.152/playlist")
 
-        # Wait for the table to load
+        # Wait for main table
         WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.TAG_NAME, "table"))
         )
 
         page = driver.page_source
 
-        # Check for the 10 test songs from data-gen.py
+        # Check for 10 test songs
         for i in range(10):
             title = f"Test Song {i}"
             artist = f"Test Artist {i}"
-            assert title in page, f"Song title '{title}' not found on page"
-            assert artist in page, f"Artist '{artist}' not found on page"
+            assert title in page, f"Song '{title}' not found!"
+            assert artist in page, f"Artist '{artist}' not found!"
 
-        print("✔ Selenium test passed: all 10 test songs and artists are present.")
+        print("✔ All test songs verified!")
 
     def tearDown(self):
         self.driver.quit()
